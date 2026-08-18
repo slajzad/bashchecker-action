@@ -1,0 +1,48 @@
+name: 'BashChecker'
+description: 'Static security and quality analysis for Bash scripts. Fails the build on findings at or above a severity threshold.'
+author: 'BashChecker'
+
+branding:
+  icon: 'terminal'
+  color: 'green'
+
+inputs:
+  files:
+    description: 'Glob of shell scripts to analyze (space- or newline-separated globs are supported).'
+    required: false
+    default: '**/*.sh'
+  fail-on:
+    description: 'Fail the build when a finding at or above this severity is present: high, medium, low, info, or none.'
+    required: false
+    default: 'high'
+  max-files:
+    description: 'Maximum number of matched files to analyze in one run.'
+    required: false
+    default: '10'
+  endpoint:
+    description: 'BashChecker CI endpoint. Override only for self-hosted deployments.'
+    required: false
+    default: 'https://wxjojwaglxttrqkhalbd.supabase.co/functions/v1/ci-check'
+
+outputs:
+  passed:
+    description: '"true" when no finding met the fail-on threshold.'
+    value: ${{ steps.check.outputs.passed }}
+  risk-score:
+    description: 'Highest risk score (0-100) across analyzed files.'
+    value: ${{ steps.check.outputs.risk-score }}
+  badge-url:
+    description: 'Badge SVG URL reflecting the highest risk score from this run.'
+    value: ${{ steps.check.outputs.badge-url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: check
+      shell: bash
+      env:
+        INPUT_FILES: ${{ inputs.files }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_MAX_FILES: ${{ inputs.max-files }}
+        INPUT_ENDPOINT: ${{ inputs.endpoint }}
+      run: ${{ github.action_path }}/run.sh
